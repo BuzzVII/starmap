@@ -21,12 +21,12 @@ def constellation_center(edges, stars):
     return xy.mean(0)
 
 
-eph = load('de421.bsp')
+eph = load('../data/de421.bsp')
 sun = eph['sun']
 earth = eph['earth']
 
 # The Hipparcos mission provides our star catalog. hipparcos.URL
-with load.open('./hip_main.dat.gz') as f:
+with load.open('../data/hip_main.dat.gz') as f:
     stars = hipparcos.load_dataframe(f)
 
 # And the constellation outlines come from Stellarium.  We make a list
@@ -36,7 +36,7 @@ with load.open('./hip_main.dat.gz') as f:
 # url = ('https://raw.githubusercontent.com/Stellarium/stellarium/master'
 #       '/skycultures/western_SnT/constellationship.fab')
 
-with load.open('./constellationship.fab') as f:
+with load.open('../data/constellationship.fab') as f:
     constellations = stellarium.parse_constellations(f)
 
 zodiac: List[str] = ['Aqr', 'Cap', 'Sgr', 'Oph', 'Ari', 'Tau', 'Lib', 'Sco', 'Psc', 'Gem', 'Cnc', 'Leo', 'Vir', 'Ori', 'Cru']
@@ -122,7 +122,8 @@ angle = np.pi - 3 * field_of_view_degrees / 360.0 * np.pi
 limit = np.sin(angle) / (1.0 - np.cos(angle))
 
 canvas_size = 400
-scale = canvas_size/2
+canvas_active = 370
+scale = canvas_active / 2
 magnitude = stars['magnitude'][bright_stars]
 sel_1 = magnitude < 3.0
 sel_2 = magnitude < 2.0
@@ -140,7 +141,7 @@ if (-limit < sun_x < limit) and (-limit < sun_y < limit):
     d.append(draw.Circle(sun_x/limit * scale, sun_y/limit * scale, 20, fill='black', stroke_width=0))
     main_drawing.append(draw.Circle(sun_x/limit * scale, sun_y/limit * scale, 20, fill='black', stroke_width=0))
 
-d.saveSvg('stars.svg')
+d.saveSvg('../assets/stars.svg')
 
 d = draw.Drawing(canvas_size, canvas_size, origin='center')
 if (-limit < moon_x < limit) and (-limit < moon_y < limit):
@@ -152,7 +153,7 @@ d = draw.Drawing(canvas_size, canvas_size, origin='center')
 for star in constellation_stars:
     if (-limit < star[0] < limit) and (-limit < star[1] < limit):
         d.append(draw.Circle(star[0]/limit * scale, star[1]/limit * scale, 3, fill='black', stroke_width=0))
-d.saveSvg('constellation_stars.svg')
+d.saveSvg('../assets/constellation_stars.svg')
 
 d = draw.Drawing(canvas_size, canvas_size, origin='center')
 for planet_name in planets:
@@ -160,7 +161,7 @@ for planet_name in planets:
     if (-limit < planet['x'] < limit) and (-limit < planet['y'] < limit):
         d.append(draw.Text(symbols[planet_name], 40, scale * planet['x']/limit, scale * planet['y']/limit, fill='black'))
         main_drawing.append(draw.Text(symbols[planet_name], 40, scale * planet['x'/limit], scale * planet['y']/limit, fill='black'))
-d.saveSvg('planets.svg')
+d.saveSvg('../assets/planets.svg')
 # subprocess.run(
 #     ['inkscape', '--without-gui', '--file=planets.svg', '--export-text-to-path', '--export-plain-svg=planets.svg'])
 
@@ -168,8 +169,8 @@ d = draw.Drawing(canvas_size, canvas_size, origin='center')
 for text in names:
     if (-limit < text[1][0] < limit) and (-limit < text[1][1] < limit):
         d.append(draw.Text(symbols[text[0]], 20, scale * text[1][0], scale * text[1][1], fill='black'))
-        main_drawing.append(draw.Text(symbols[text[0]], 20, scale * text[1][0], scale * text[1][1], fill='black'))
-d.saveSvg('constellation_names.svg')
+        #main_drawing.append(draw.Text(symbols[text[0]], 20, scale * text[1][0], scale * text[1][1], fill='black'))
+d.saveSvg('../assets/constellation_names.svg')
 # subprocess.run(['inkscape', '--without-gui', '--file=constellation_names.svg', '--export-text-to-path',
 #                 '--export-plain-svg=constellation_names.svg'])
 
@@ -179,11 +180,16 @@ for line in lines_xy:
             -limit < line[1, 1] < limit):
         d.append(draw.Line(*(line.flatten()/limit * scale), stroke='black', stroke_width=1, fill='black'))
         main_drawing.append(draw.Line(*(line.flatten()/limit * scale), stroke='black', stroke_width=1, fill='black'))
-d.saveSvg('constellation_lines.svg')
+d.saveSvg('../assets/constellation_lines.svg')
 
 d = draw.Drawing(canvas_size, canvas_size, origin='center')
-d.append(draw.Lines(-scale, -scale, -scale, scale, scale, scale,
-                    scale, -scale, -scale, -scale, stroke='black',
+d.append(draw.Lines(-canvas_size/2, -canvas_size/2, -canvas_size/2, canvas_size/2, canvas_size/2, canvas_size/2,
+                    canvas_size/2, -canvas_size/2, -canvas_size/2, -canvas_size/2, stroke='black',
                     stroke_width=3, fill='black'))
-d.saveSvg('border.svg')
-main_drawing.saveSvg('main.svg')
+main_drawing.append(draw.Lines(-canvas_size/2, -canvas_size/2, -canvas_size/2, canvas_size/2, canvas_size/2, canvas_size/2,
+                    canvas_size/2, -canvas_size/2, -canvas_size/2, -canvas_size/2, stroke='black',
+                    stroke_width=3, fill='black'))
+d.saveSvg('../assets/border.svg')
+
+main_drawing.setPixelScale(1)
+main_drawing.saveSvg('../assets/main.svg')
