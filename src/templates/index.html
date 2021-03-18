@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="boxes" style="position:absolute; left:50px; top:50px; cursor:auto">
+    <input type="text" id="from" value="London"><label for="from"></label>
+    <input type="text" id="to" value="New York"><label for="to"></label>
+</div>
+    <script>
+    
+    mapboxgl.accessToken = 'pk.eyJ1IjoicGFuZ2VhbWFwcyIsImEiOiJjaWdra3A1bjgwMHRwdW5senp6ajZzN2Z5In0.pZv62GV1KFSFmcnJqMCnFQ'; 
+    
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/pangeamaps/cjrfg2xig6upe2sp22iztvgs8',
+        center: [{{ center.lng }}, {{ center.lat }}],
+        zoom: {{ zoom }} 
+    });
+
+    map.on('load', () => {
+        var popup = new mapboxgl.Popup({ closeOnClick: false })
+                                .setLngLat([-0.126236, 51.5001523])
+                                .setHTML('-- to -- <br>Distance:-- <br>Ping: --')
+                                .addTo(map);
+
+        map.addSource('orbits', {
+            type: 'geojson',
+            data: document.location.href + 'orbits.geojson'
+        });
+
+        map.addLayer({
+            id: 'orbits',
+            type: 'line',
+            source: 'orbits',
+            paint: {
+               'line-color':'blue',
+               'line-opacity':0.33,
+               'line-width':1
+            }
+        });
+
+        let orbit_timer = window.setInterval(
+            () => {
+                let sats = map.getSource('orbits');
+                sats.setData(document.location.href + 'orbits.geojson');
+            }, 10
+        )
+
+        map.addSource('path', {
+            type: 'geojson',
+            data: document.location.href + 'path/London/New York/'
+        });
+
+        map.addLayer({
+            id: 'path',
+            type: 'line',
+            source: 'path',
+            paint: {
+                'line-color':'red',
+                'line-opacity':1,
+                'line-width':3
+            }
+        });
+
+        let path_timer = window.setInterval(
+            () => {
+                let sats = map.getSource('path');
+                let start = document.getElementById('from').value;
+                let end = document.getElementById('to').value;
+                sats.setData(document.location.href + 'path/' + start + '/' + end + '/');
+                let features = map.querySourceFeatures('path');
+                if (features && features.length > 0) {
+                    let properties = features[0]["properties"];
+                    if (properties) {
+                        popup.setHTML(properties.name + '<br>Distance:' + properties.distance.toFixed(0) + 'km<br>Ping: ' + properties.time.toFixed(2) + 'ms')
+                    }
+                }
+            }, 2
+        )
+
+        map.loadImage(
+            document.location.href + 'custom_marker.png',
+            (error, image) => {
+                map.addImage('custom-marker', image)
+                map.addSource('sats', {
+                    type: 'geojson',
+                    data: document.location.href + 'sats.geojson',
+                });
+
+                map.addLayer({
+                    id: 'sats',
+                    type: 'symbol',
+                    source: 'sats',
+                    layout: {
+                        'icon-image':'custom-marker',
+                        'text-field':['get', 'name'],
+                        'text-font': [
+                            'Open Sans Semibold',
+                            'Arial Unicode MS Bold'
+                        ],
+                        'text-offset': [0, 1.25],
+                        'text-anchor': 'top'
+                    },
+                });
+
+                let timer = window.setInterval(
+                    () => {
+                        let sats = map.getSource('sats');
+                        sats.setData(document.location.href + 'sats.geojson');
+                        }, 1
+                    )
+            })
+    })
+
+    </script>
+{% endblock %}

@@ -1,0 +1,33 @@
+.button {
+    margin-top: 2px;
+    margin-right: 2px;
+    border-radius: 10px;
+    background-color: #dfc29a;
+    border: 0px;
+    font-weight: bold;
+    width: 110px;
+    height: 1.5em;
+    color: #f0f0f0;
+    cursor: pointer;
+}
+
+.button:hover {
+    color:#8a7b53;
+}
+
+input {
+    cursor: text;
+    color: #f0f0f0;
+    margin-top: 2px;
+    cursor: pointer;
+    background-color: #dfc29a;
+    border: 1px;
+    border-color: #8a7b53; 
+    border-radius: 4px;
+    border-style: solid;
+    height: 1.2em;
+}
+
+input:hover {
+    cursor: text;
+}
